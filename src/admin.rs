@@ -6,6 +6,7 @@
 //! - [`require_admin`] — admin only.
 //! - [`require_relay_or_admin`] — relay signer or admin.
 //! - [`require_pending_admin`] — the two-step admin transfer's pending admin.
+//! - [`require_guardian`] — the emergency guardian (ADR-0004).
 //!
 //! The helpers take already-loaded [`Address`] values so they carry no
 //! storage-tier assumptions; callers read the stored identities via
@@ -66,6 +67,31 @@ pub fn require_pending_admin(
 ) -> Result<(), ContractError> {
     caller.require_auth();
     if caller != pending_admin {
+        return Err(ContractError::NotAuthorized);
+    }
+    let _ = env;
+    Ok(())
+}
+
+/// Requires that `caller` is the stored emergency `guardian`.
+///
+/// Used by the guardian emergency admin revocation entry point described in
+/// `docs/adr/0004-guardian-emergency-admin-revocation.md`. Authenticates
+/// `caller` via `require_auth()` and then compares it against `guardian`.
+/// Returns [`ContractError::NotAuthorized`] when the caller is authenticated
+/// but is not the guardian.
+///
+/// The guardian role is deliberately narrow: it can only *revoke/replace* the
+/// admin in an emergency, never grant itself unrelated admin powers. This
+/// helper only proves the caller is the guardian; the entry point that uses it
+/// is responsible for restricting the action to revocation.
+pub fn require_guardian(
+    env: &Env,
+    caller: &Address,
+    guardian: &Address,
+) -> Result<(), ContractError> {
+    caller.require_auth();
+    if caller != guardian {
         return Err(ContractError::NotAuthorized);
     }
     let _ = env;
