@@ -19,6 +19,10 @@ pub const SCHEMA_VERSION: u32 = 1;
 pub enum StorageKey {
     /// Contract administrator address.
     Admin,
+    /// Address authorized to relay signed transactions.
+    RelaySigner,
+    /// Address nominated to become the next administrator (two-step transfer).
+    PendingAdmin,
     /// Monotonic transaction counter.
     TxCounter,
     /// Per-transaction record keyed by id.
@@ -38,4 +42,8 @@ pub enum ContractError {
     SchemaVersionMismatch = 2,
     /// Requested transaction record does not exist.
     NotFound = 3,
+    /// Caller authenticated via `require_auth()` but is not authorized for
+    /// this operation (distinct from a missing `require_auth()` call, which
+    /// the SDK raises on its own).
+    NotAuthorized = 4,
 }
